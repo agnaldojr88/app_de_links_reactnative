@@ -12,6 +12,7 @@ import { Button } from "@/components/button";
 
 export default function Add(){
 
+    const [category, setCategory] = useState("")
     const [name, setName] = useState("");
     const [url, setUrl] = useState("");
 
@@ -30,7 +31,7 @@ export default function Add(){
             </View>
 
             <Text style={styles.label}>Selecione uma categoria</Text>
-            <Categories />
+            <Categories onChange={setCategory} selected={category} />
 
             <View style={styles.form}>
                 <Input 
