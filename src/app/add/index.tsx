@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, Alert } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router"
 
 import { styles } from "./style";
 import { colors } from "@/styles/colors";
+import { linkStorage } from "@/storage/link-storage";
 
 import { Categories } from "@/components/categories";
 import { Input } from "@/components/input";
@@ -16,8 +17,35 @@ export default function Add(){
     const [name, setName] = useState("");
     const [url, setUrl] = useState("");
 
-    function handleAdd(){
-        console.log({name, url})
+    async function handleAdd(){
+        try{
+        if(!category){
+            return Alert.alert("Categoria", "Selecione a categoria")
+        }
+
+        if(!name.trim()){
+            return Alert.alert("Nome", "Informe o nome")
+        }
+
+        if(!url.trim()){
+            return Alert.alert("URL", "Informe a URL")
+        }
+
+        await linkStorage.save({
+            id: new Date().getTime().toString(),
+            name, 
+            url,
+            category
+        })
+
+        //const data = await linkStorage.get()
+        //console.log(data)
+        //console.log({name, url})
+
+        } catch (error) {
+            Alert.alert("Erro", "Não foi possivel salvar o link!")
+            console.log(error)
+        }
     }
 
     return (
@@ -40,9 +68,10 @@ export default function Add(){
                     autoCorrect={false}
                 />
                 <Input 
-                    placeholder="Url"
+                    placeholder="URL"
                     onChangeText={setUrl}
                     autoCorrect={false}
+                    autoCapitalize="none"
                 />
 
                 <Button title="Adicionar" onPress={handleAdd}/>
