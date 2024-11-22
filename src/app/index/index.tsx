@@ -1,4 +1,4 @@
-import {View, Image, TouchableOpacity, FlatList, Modal, Text, Alert} from "react-native"
+import {View, Image, TouchableOpacity, FlatList, Modal, Text, Alert, Linking} from "react-native"
 import {MaterialIcons} from "@expo/vector-icons"
 import { router, useFocusEffect } from "expo-router"
 import { useState, useCallback } from "react"
@@ -13,25 +13,62 @@ import { Categories } from "@/components/categories"
 import { Option } from "@/components/option"
 
 export default function Index(){
+    const [showModal, setShowModal] = useState(false)
+    const [link, setLink] = useState<LinkStorage>({} as LinkStorage)
     const [links, setLinks] = useState<LinkStorage[]>([])
     const [category, setCategory] = useState(categories[0].name)
 
     async function getLinks(){
         try{
             const response = await linkStorage.get()
-            setLinks(response)
+            const filtered = response.filter( (link) => link.category === category)
+            setLinks(filtered)
             
         }catch(error){
             Alert.alert("Não foi possivel listar os links")
         }
     }
 
+    function handleDetails(selected: LinkStorage){
+        setShowModal(true)
+        setLink(selected)
+    }
+
+    async function linkRemove(){
+        try{
+            await linkStorage.remove(link.id)
+            getLinks()
+            setShowModal(false)
+        }catch(error){
+            Alert.alert("Error", "Não foi possivel excluir")
+            console.log(error)
+        }
+    }
+
+    function handleRemove(){
+        
+        Alert.alert("Excluir", "Deseja realmente excluir? ", [
+            { style: "cancel", text: "Não"},
+            { text: "Sim", onPress: linkRemove}
+        ])
+    }
+
+    async function handleOpen(){
+        try{
+            await Linking.openURL(link.url)
+            setShowModal(false)
+        }catch(error){
+            Alert.alert("Link", "Não foi possivel  abrir o link")
+            console.log(error)
+        }
+    }
+
     useFocusEffect(
         useCallback(() => {
             getLinks()
-        }, [])
+        }, [category])
     )
-    
+
     return (
         <View style={styles.container}>
 
@@ -56,7 +93,7 @@ export default function Index(){
                     <Link 
                         name={item.name}
                         url={item.url}
-                        onDetails={() => console.log("Clicou")} 
+                        onDetails={() => handleDetails(item)} 
                     /> 
                 )}
                 style={styles.links}
@@ -65,13 +102,13 @@ export default function Index(){
             />
 
                 
-            <Modal transparent visible={false}>
+            <Modal transparent visible={showModal} animationType="slide">
                 <View style={styles.modal}>
                     <View style={styles.modalContent}>
                         
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalCategory}>Curso</Text>
-                            <TouchableOpacity>
+                            <Text style={styles.modalCategory}>{link.category}</Text>
+                            <TouchableOpacity onPress={() => setShowModal(false)}>
                                 <MaterialIcons 
                                     name="close" 
                                     size={20} 
@@ -81,16 +118,16 @@ export default function Index(){
                         </View>
 
                         <Text style={styles.modalLinkName}>
-                            Rockseat
+                            {link.name}
                         </Text>
 
                         <Text style={styles.modalUrl}>
-                            www.google.com.br
+                            {link.url}
                         </Text>
 
                         <View style={styles.modalFooter}>
-                            <Option name="Excluir" icon="delete" variant="secondary" />
-                            <Option name="Abrir" icon="language" />             
+                            <Option name="Excluir" icon="delete" variant="secondary" onPress={handleRemove}  />
+                            <Option name="Abrir" icon="language" onPress={handleOpen} />             
                         </View>
 
                     </View>

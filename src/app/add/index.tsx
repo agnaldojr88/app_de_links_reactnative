@@ -38,6 +38,10 @@ export default function Add(){
             category
         })
 
+        Alert.alert("Sucesso", "Novo link adicionado", [
+            { text: "Ok", onPress: () => router.back() }
+        ])
+
         //const data = await linkStorage.get()
         //console.log(data)
         //console.log({name, url})
